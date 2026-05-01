@@ -1,7 +1,5 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
 
 const clientId = (process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID || "")
   .replace(/^["']|["']$/g, "")
@@ -16,7 +14,6 @@ const secret = (process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "ZbcJc
   .trim()
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId,
