@@ -1,32 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-// NextAuth Models
 model User {
-  id            String    @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?        @unique
   emailVerified DateTime?
   image         String?
-  activeGroups  Int       @default(3)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  activeGroups  Int            @default(3)
   accounts      Account[]
-  sessions      Session[]
-
-  expenses      Expense[]
-  categories    Category[]
-  expenseSplits ExpenseSplit[]
-  comments      Comment[]
   budgets       Budget[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  categories    Category[]
+  comments      Comment[]
+  expenses      Expense[]
+  expenseSplits ExpenseSplit[]
+  sessions      Session[]
 }
 
 model Account {
@@ -35,15 +32,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -64,7 +60,80 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Core App Models
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  color     String?
+  icon      String?
+  isDefault Boolean   @default(false)
+  userId    String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  budgets   Budget[]
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
+}
+
+model Expense {
+  id         String          @id @default(cuid())
+  title      String
+  amount     Float
+  date       DateTime
+  notes      String?
+  type       TransactionType @default(EXPENSE)
+  userId     String
+  categoryId String
+  groupId    String?
+  splitType  SplitType?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  comments   Comment[]
+  category   Category        @relation(fields: [categoryId], references: [id])
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  splits     ExpenseSplit[]
+
+  @@index([userId, date])
+  @@index([categoryId])
+  @@index([groupId])
+}
+
+model ExpenseSplit {
+  id        String   @id @default(cuid())
+  expenseId String
+  userId    String
+  amount    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expense   Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  text      String
+  expenseId String
+  userId    String
+  parentId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expense   Expense   @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Comment[] @relation("CommentReplies")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  amount     Float
+  userId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId])
+}
 
 enum TransactionType {
   INCOME
@@ -75,98 +144,4 @@ enum SplitType {
   EQUAL
   EXACT
   PERCENT
-}
-
-model Category {
-  id    String  @id @default(cuid())
-  name  String
-  color String?
-  icon  String?
-
-  isDefault Boolean @default(false)
-  userId    String?
-  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  expenses Expense[]
-  budgets  Budget[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([name])
-}
-
-model Expense {
-  id     String   @id @default(cuid())
-  title  String
-  amount Float
-  date   DateTime
-  notes  String?
-
-  type TransactionType @default(EXPENSE)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
-
-  groupId String?
-
-  splitType SplitType?
-  splits    ExpenseSplit[]
-  comments  Comment[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId, date])
-  @@index([categoryId])
-  @@index([groupId])
-}
-
-model ExpenseSplit {
-  id        String  @id @default(cuid())
-  expenseId String
-  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  amount Float
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Comment {
-  id   String @id @default(cuid())
-  text String
-
-  expenseId String
-  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  parentId String?
-  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  replies  Comment[] @relation("CommentReplies")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Budget {
-  id         String   @id @default(cuid())
-  amount     Float
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@unique([userId, categoryId])
 }
