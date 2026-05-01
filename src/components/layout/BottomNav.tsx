@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, History, BarChart3, LogOut } from "lucide-react"
+import { Home, History, BarChart3, LogOut, Notebook } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
@@ -45,6 +45,17 @@ export function BottomNav() {
       >
         <BarChart3 className={cn("w-5 h-5", pathname === "/analytics" && "drop-shadow-[0_0_6px_rgba(99,102,241,0.8)]")} />
         <span className="text-[10px] font-semibold">Analytics</span>
+      </Link>
+
+      <Link
+        href="/secret-notes"
+        className={cn(
+          "flex flex-col items-center justify-center gap-1 px-2.5 py-1 rounded-xl transition-all",
+          pathname === "/secret-notes" ? "text-primary" : "text-muted-foreground hover:text-white"
+        )}
+      >
+        <Notebook className={cn("w-5 h-5", pathname === "/secret-notes" && "drop-shadow-[0_0_6px_rgba(99,102,241,0.8)]")} />
+        <span className="text-[10px] font-semibold">Notes</span>
       </Link>
 
       <button

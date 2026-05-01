@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, PieChart, Wallet, Settings, Plus, LayoutDashboard, History, BarChart3, Sparkles } from "lucide-react"
+import { Home, PieChart, Wallet, Settings, Plus, LayoutDashboard, History, BarChart3, Sparkles, Notebook } from "lucide-react"
 import { AddExpenseDialog } from "@/components/expenses/AddExpenseDialog"
 import { Button } from "@/components/ui/button"
 import { UserNav } from "./UserNav"
@@ -13,6 +13,7 @@ const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Transactions", href: "/transactions", icon: History },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Secret Notes", href: "/secret-notes", icon: Notebook },
 ]
 
 export function Sidebar() {

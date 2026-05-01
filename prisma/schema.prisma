@@ -24,6 +24,7 @@ model User {
   expenses      Expense[]
   expenseSplits ExpenseSplit[]
   sessions      Session[]
+  friendNotes   FriendNote[]
 }
 
 model Account {
@@ -144,4 +145,24 @@ enum SplitType {
   EQUAL
   EXACT
   PERCENT
+}
+
+model FriendNote {
+  id          String   @id @default(cuid())
+  friendName  String
+  amount      Float
+  type        NoteType @default(GET)
+  notes       String?
+  userId      String
+  isSettled   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum NoteType {
+  GET
+  GIVE
 }
