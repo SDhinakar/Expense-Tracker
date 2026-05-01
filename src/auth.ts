@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import { PrismaClient } from "@prisma/client"
+import { createPrismaClient } from "@/lib/prisma"
 
 const clientId = (process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID || "")
   .replace(/^["']|["']$/g, "")
@@ -28,9 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user }) {
       if (user.email) {
-        const clientPrisma = new PrismaClient({
-          datasources: { db: { url: process.env.DATABASE_URL } },
-        })
+        const clientPrisma = createPrismaClient()
         try {
           await clientPrisma.user.upsert({
             where: { email: user.email },
@@ -54,9 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user && session.user.email) {
-        const clientPrisma = new PrismaClient({
-          datasources: { db: { url: process.env.DATABASE_URL } },
-        })
+        const clientPrisma = createPrismaClient()
         try {
           const dbUser = await clientPrisma.user.findUnique({
             where: { email: session.user.email },

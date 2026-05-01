@@ -2,14 +2,20 @@ import { PrismaClient } from "@prisma/client"
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
+export function createPrismaClient() {
+  let dbUrl = process.env.DATABASE_URL || ""
+  if (dbUrl && !dbUrl.includes("pgbouncer=")) {
+    dbUrl += dbUrl.includes("?") ? "&pgbouncer=true" : "?pgbouncer=true"
+  }
+  return new PrismaClient({
     datasources: {
       db: {
-        url: process.env.DATABASE_URL
+        url: dbUrl
       }
     }
   })
+}
+
+export const prisma = globalForPrisma.prisma || createPrismaClient()
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
