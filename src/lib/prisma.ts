@@ -18,4 +18,5 @@ export function createPrismaClient() {
 
 export const prisma = globalForPrisma.prisma || createPrismaClient()
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
+// Cache globally in both dev and production to reuse open DB connections on warm serverless functions
+globalForPrisma.prisma = prisma

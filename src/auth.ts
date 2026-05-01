@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import { createPrismaClient } from "@/lib/prisma"
+import { prisma } from "@/lib/prisma"
 
 const clientId = (process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID || "")
   .replace(/^["']|["']$/g, "")
@@ -28,9 +28,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async signIn({ user }) {
       if (user.email) {
-        const clientPrisma = createPrismaClient()
         try {
-          await clientPrisma.user.upsert({
+          await prisma.user.upsert({
             where: { email: user.email },
             update: {
               name: user.name,
@@ -44,17 +43,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           })
         } catch (err) {
           console.error("Fail-safe upsert error:", err)
-        } finally {
-          await clientPrisma.$disconnect()
         }
       }
       return true
     },
     async session({ session, token }) {
       if (session.user && session.user.email) {
-        const clientPrisma = createPrismaClient()
         try {
-          const dbUser = await clientPrisma.user.findUnique({
+          const dbUser = await prisma.user.findUnique({
             where: { email: session.user.email },
           })
           if (dbUser) {
@@ -65,8 +61,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         } catch (err) {
           console.error("Session lookup error:", err)
           if (token.sub) session.user.id = token.sub
-        } finally {
-          await clientPrisma.$disconnect()
         }
       }
       return session
