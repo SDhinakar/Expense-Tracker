@@ -97,11 +97,34 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-image: 
-      radial-gradient(at 0% 0%, oklch(0.65 0.24 264 / 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, oklch(0.6 0.2 300 / 0.05) 0px, transparent 50%),
-      radial-gradient(at 50% 100%, oklch(0.75 0.15 200 / 0.03) 0px, transparent 50%);
     background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  /* Animated orb layer — sits behind everything */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+  }
+  body::before {
+    width: 50vw;
+    height: 50vw;
+    top: -15%;
+    left: -10%;
+    background: radial-gradient(circle, oklch(0.65 0.24 264 / 0.08), transparent 70%);
+    animation: orbFloat1 18s ease-in-out infinite alternate;
+  }
+  body::after {
+    width: 45vw;
+    height: 45vw;
+    bottom: -10%;
+    right: -8%;
+    background: radial-gradient(circle, oklch(0.70 0.22 300 / 0.07), transparent 70%);
+    animation: orbFloat2 22s ease-in-out infinite alternate;
   }
 }
 
@@ -126,8 +149,33 @@
     animation: fadeIn 0.5s ease-out forwards;
   }
 
+  /* --- Keyframes --- */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes orbFloat1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(8vw, 6vh) scale(1.15); }
+    66%  { transform: translate(-4vw, 12vh) scale(0.9); }
+    100% { transform: translate(6vw, -4vh) scale(1.05); }
+  }
+
+  @keyframes orbFloat2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(-10vw, -8vh) scale(1.1); }
+    66%  { transform: translate(6vw, -14vh) scale(0.85); }
+    100% { transform: translate(-5vw, 6vh) scale(1.1); }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 var(--glow-color, oklch(0.65 0.24 264 / 0.5)); }
+    50% { box-shadow: 0 0 0 12px var(--glow-color, oklch(0.65 0.24 264 / 0)); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 }

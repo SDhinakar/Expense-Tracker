@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { format, endOfDay } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
 
@@ -23,6 +23,19 @@ export function DateRangePicker({
   date: DateRange | undefined
   setDate: (date: DateRange | undefined) => void
 }) {
+  // Normalize: ensure the `to` date is always end-of-day so records
+  // created at any time on the end date are included in queries.
+  function handleSelect(range: DateRange | undefined) {
+    if (!range) {
+      setDate(undefined)
+      return
+    }
+    setDate({
+      from: range.from,
+      to: range.to ? endOfDay(range.to) : undefined,
+    })
+  }
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -57,7 +70,7 @@ export function DateRangePicker({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={setDate}
+            onSelect={handleSelect}
             numberOfMonths={1}
           />
         </PopoverContent>

@@ -20,6 +20,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { useDateRange } from "@/contexts/DateRangeContext"
 import type { DateMode } from "@/contexts/DateRangeContext"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Loader } from "@/components/ui/loader"
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null)
@@ -122,11 +123,7 @@ export default function AnalyticsPage() {
     return format(dateRange.from, "MMM d, yyyy")
   }, [dateRange, dateMode])
 
-  if (loading && !data) return (
-    <div className="flex h-[80vh] items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-    </div>
-  )
+  if (loading && !data) return <Loader />
 
   return (
     <div className="space-y-6">
@@ -283,7 +280,11 @@ export default function AnalyticsPage() {
                       : `${totals.count} transaction${totals.count !== 1 ? "s" : ""} · ${dateSummary}`}
                   </CardDescription>
                 </div>
-                {loading && <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />}
+                {loading && (
+                  <div className="relative w-8 h-8">
+                    <Loader inline />
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-0">

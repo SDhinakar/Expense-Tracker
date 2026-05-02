@@ -78,7 +78,7 @@ export async function deleteFriendNote(id: string) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
-  await prisma.friendNote.delete({
+  await prisma.friendNote.deleteMany({
     where: { id, userId: session.user.id },
   })
 

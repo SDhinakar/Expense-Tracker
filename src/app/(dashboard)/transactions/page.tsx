@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useDeferredValue } from "react"
 import { getExpenses, deleteExpense } from "@/lib/actions/expense"
 import {
   Table,
@@ -20,24 +20,28 @@ import { EditExpenseDialog } from "@/components/expenses/EditExpenseDialog"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { useDateRange } from "@/contexts/DateRangeContext"
 import { cn } from "@/lib/utils"
+import { Loader } from "@/components/ui/loader"
 
 export default function TransactionsPage() {
   const [expenses, setExpenses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  // Defer the filter so typing feels instant — React batches the expensive filter pass
+  const search = useDeferredValue(searchInput)
   const { dateRange, setDateRange } = useDateRange()
+
+  const loadExpenses = useCallback(async () => {
+    setLoading(true)
+    const data = await getExpenses(
+      dateRange?.from ? { from: dateRange.from, to: dateRange.to } : undefined
+    )
+    setExpenses(data)
+    setLoading(false)
+  }, [dateRange])
 
   useEffect(() => {
     loadExpenses()
-  }, [dateRange])
-
-  async function loadExpenses() {
-    setLoading(true)
-    // For now we use the same getExpenses but we could update it to take dates
-    const data = await getExpenses()
-    setExpenses(data)
-    setLoading(false)
-  }
+  }, [loadExpenses])
 
   async function handleDelete(id: string) {
     if (confirm("Are you sure you want to delete this transaction?")) {
@@ -46,18 +50,14 @@ export default function TransactionsPage() {
     }
   }
 
-  const filteredExpenses = expenses.filter(ex => {
-    const matchesSearch = ex.title.toLowerCase().includes(search.toLowerCase()) ||
-                         ex.category.name.toLowerCase().includes(search.toLowerCase())
-    
-    if (!dateRange?.from) return matchesSearch
-    
-    const exDate = new Date(ex.date)
-    const isAfterFrom = exDate >= dateRange.from
-    const isBeforeTo = dateRange.to ? exDate <= dateRange.to : true
-    
-    return matchesSearch && isAfterFrom && isBeforeTo
-  })
+  // Server already filtered by date — only search filtering needed client-side
+  const filteredExpenses = search.trim()
+    ? expenses.filter(
+        (ex) =>
+          ex.title.toLowerCase().includes(search.toLowerCase()) ||
+          ex.category.name.toLowerCase().includes(search.toLowerCase())
+      )
+    : expenses
 
   const downloadCSV = () => {
     const headers = ["Date", "Description", "Category", "Amount", "Type"]
@@ -87,27 +87,26 @@ export default function TransactionsPage() {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-4xl font-black text-white">Financial <span className="text-primary">Ledger</span></h1>
-          <p className="text-muted-foreground mt-2">A complete audit trail of your financial movements.</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white">Financial <span className="text-primary">Ledger</span></h1>
+          <p className="text-muted-foreground mt-1 text-sm">A complete audit trail of your financial movements.</p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full md:w-[260px]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative flex-1 min-w-0 sm:max-w-[260px]">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search history..."
-              className="pl-11 glass border-white/5 h-11 rounded-xl"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              className="pl-11 glass border-white/5 h-11 rounded-xl w-full"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
           <DateRangePicker date={dateRange} setDate={setDateRange} />
-          <Button 
+          <Button
             onClick={downloadCSV}
             variant="outline"
-            className="h-11 glass border-white/5 bg-white/5 hover:bg-white/10 text-white font-medium px-4 rounded-xl transition-all"
+            className="h-11 glass border-white/5 bg-white/5 hover:bg-white/10 text-white font-medium px-4 rounded-xl transition-all shrink-0"
           >
             <Download className="w-4 h-4 mr-2" />
             Export CSV
@@ -131,9 +130,7 @@ export default function TransactionsPage() {
           <div className="md:hidden divide-y divide-white/5">
             <AnimatePresence mode="popLayout">
               {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                </div>
+                <Loader inline />
               ) : filteredExpenses.length === 0 ? (
                 <div className="text-center text-muted-foreground py-20">
                   No transactions found in this range.
@@ -218,8 +215,8 @@ export default function TransactionsPage() {
                 <AnimatePresence mode="popLayout">
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-20">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+                      <TableCell colSpan={5}>
+                        <Loader inline />
                       </TableCell>
                     </TableRow>
                   ) : filteredExpenses.length === 0 ? (
