@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zenith - Track your expenses",
+  title: "Zenithe - Track your expenses",
   description: "A modern finance app built with Next.js and Prisma",
 };
 

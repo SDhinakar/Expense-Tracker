@@ -26,7 +26,7 @@ export function Sidebar() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/20">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-white">Zenith</h2>
+          <h2 className="text-xl font-bold tracking-tight text-white">Zenithe</h2>
         </div>
 
         <AddExpenseDialog>

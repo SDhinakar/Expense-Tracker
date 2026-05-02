@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { FriendNoteClient } from "@/components/secret-notes/FriendNoteClient"
 
 export const metadata: Metadata = {
-  title: "Secret Friend Notes | Zenith",
+  title: "Secret Friend Notes | Zenithe",
   description: "Keep track of the amounts you need to give to or get from friends securely.",
 }
 

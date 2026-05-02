@@ -18,7 +18,7 @@ export default async function Home() {
             <Sparkles className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-            Zenith
+            Zenithe
           </h1>
           <p className="text-muted-foreground text-sm max-w-[300px]">
             Advanced financial intelligence platform for smart wealth tracking.
