@@ -110,7 +110,7 @@ const fetchUnifiedData = unstable_cache(
     if (catIds && catIds.length > 0) whereClause.categoryId = { in: catIds }
     if (type && type !== "ALL") whereClause.type = type
 
-    const [lifetimeTotals, transactions, userBudgets] = await Promise.all([
+    const results = await Promise.allSettled([
       // 1. Overall lifetime aggregates
       prisma.expense.groupBy({
         by: ["type"],
@@ -136,6 +136,10 @@ const fetchUnifiedData = unstable_cache(
       // 3. Current user limits
       prisma.budget.findMany({ where: { userId } }),
     ])
+
+    const lifetimeTotals = results[0].status === "fulfilled" ? results[0].value : []
+    const transactions = results[1].status === "fulfilled" ? results[1].value : []
+    const userBudgets = results[2].status === "fulfilled" ? (results[2].value as any[]) : []
 
     const balanceIncome = lifetimeTotals.find(t => t.type === "INCOME")?._sum.amount ?? 0
     const balanceExpense = lifetimeTotals.find(t => t.type === "EXPENSE")?._sum.amount ?? 0
@@ -208,7 +212,14 @@ export async function getDashboardAndAnalytics(filters: {
   requestTracker.set(userId, now)
 
   const { fromStr, toStr, categoryIds, type } = filters
-  return fetchUnifiedData(userId, fromStr, toStr, categoryIds, type)
+  
+  const cachedFn = unstable_cache(
+    async () => fetchUnifiedData(userId, fromStr, toStr, categoryIds, type),
+    [`dashboard-data-${userId}-${type}-${fromStr || ""}-${toStr || ""}`],
+    { revalidate: 120, tags: [`dashboard-data-${userId}`] }
+  )
+
+  return cachedFn()
 }
 
 export async function revalidateDashboard() {

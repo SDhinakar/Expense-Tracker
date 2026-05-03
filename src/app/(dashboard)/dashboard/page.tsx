@@ -1,12 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Wallet, ArrowUpIcon, ArrowDownIcon, PieChart, RefreshCw } from "lucide-react"
-import { getDashboardAndAnalytics, revalidateDashboard } from "@/lib/actions/expense"
+import { useDashboardData } from "@/context/DashboardDataContext"
 import { getCategories } from "@/lib/actions/category"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FiltersBar } from "@/components/dashboard/FiltersBar"
 import { TransactionsTable } from "@/components/dashboard/TransactionsTable"
@@ -24,78 +23,19 @@ const item = {
   show: { y: 0, opacity: 1 },
 }
 
-// Wrap internal subcomponents with React.memo for high-performance rendering
 const MemoizedFiltersBar = React.memo(FiltersBar)
 const MemoizedTransactionsTable = React.memo(TransactionsTable)
 const MemoizedInsightsCard = React.memo(InsightsCard)
 const MemoizedFilterSummary = React.memo(FilterSummary)
 
 export default function DashboardPage() {
-  const searchParams = useSearchParams()
-
-  const typeParam = searchParams.get("type") || "ALL"
-  const catParam = searchParams.get("category") || "all"
-  const fromParam = searchParams.get("from")
-  const toParam = searchParams.get("to")
-
+  const { data, loading, refreshData, cooldownActive } = useDashboardData()
   const [categories, setCategories] = React.useState<any[]>([])
-  const [data, setData] = React.useState<any>(null)
-  const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
     getCategories().then(setCategories)
   }, [])
 
-  const loadData = React.useCallback(() => {
-    let active = true
-    setLoading(true)
-
-    async function fetchData() {
-      try {
-        const res = await getDashboardAndAnalytics({
-          fromStr: fromParam || undefined,
-          toStr: toParam || undefined,
-          categoryIds: catParam === "all" ? [] : [catParam],
-          type: typeParam as any,
-        })
-
-        if (active && res) {
-          setData(res)
-        }
-      } catch (error) {
-        console.error("Dashboard error loading unified data:", error)
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-
-    fetchData()
-    return () => {
-      active = false
-    }
-  }, [fromParam, toParam, typeParam, catParam])
-
-  // Debounced effect layer to reduce server queries on free tier
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      loadData()
-    }, 400)
-
-    return () => clearTimeout(timeout)
-  }, [loadData])
-
-  async function handleRefresh() {
-    setLoading(true)
-    try {
-      await revalidateDashboard()
-      loadData()
-    } catch (e) {
-      console.error(e)
-      setLoading(false)
-    }
-  }
-
-  // compute dynamic fallback insights
   const dynamicInsights = React.useMemo(() => {
     if (!data) return []
     const items: any[] = []
@@ -140,7 +80,6 @@ export default function DashboardPage() {
   }
 
   const { balance = 0, income = 0, expense = 0, incomeTotal = 0, expenseTotal = 0, netTotal = 0, savingsRate = 0, updatedAt } = data || {}
-
   const overallSavingsRate = income > 0 ? ((income - expense) / income) * 100 : 0
   const monthlyBalance = incomeTotal - expenseTotal
 
@@ -151,7 +90,6 @@ export default function DashboardPage() {
       animate="show"
       className="space-y-10"
     >
-      {/* Header section with explicit refresh triggers */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight">
@@ -169,20 +107,18 @@ export default function DashboardPage() {
             </span>
           )}
           <Button
-            onClick={handleRefresh}
-            disabled={loading}
+            onClick={() => refreshData(true)}
+            disabled={loading || cooldownActive}
             size="sm"
             className="gap-1.5 h-9 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-lg shadow-primary/20 transition-all font-bold px-3 text-xs"
           >
             <RefreshCw className={loading ? "w-3.5 h-3.5 animate-spin" : "w-3.5 h-3.5"} />
-            Refresh
+            {cooldownActive ? "Cooldown..." : "Refresh"}
           </Button>
         </div>
       </div>
 
-      {/* High-Level Stat Summary Cards */}
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-        {/* Total Balance */}
         <motion.div variants={item} className="col-span-2 sm:col-span-2 lg:col-span-1">
           <Card className="glass-card premium-border relative overflow-hidden group h-full">
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-500" />
@@ -201,7 +137,6 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Monthly Income */}
         <motion.div variants={item} className="col-span-1 sm:col-span-1 lg:col-span-1">
           <Card className="glass-card premium-border group h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -219,7 +154,6 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Monthly Expenses */}
         <motion.div variants={item} className="col-span-1 sm:col-span-1 lg:col-span-1">
           <Card className="glass-card premium-border group h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -237,7 +171,6 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Savings Rate */}
         <motion.div variants={item} className="col-span-2 sm:col-span-2 lg:col-span-1">
           <Card className="glass-card premium-border group h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -256,20 +189,18 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Analytics Filters & Search controls */}
       <motion.div variants={item} className="space-y-6">
         <MemoizedFiltersBar categories={categories} />
 
-        {/* Grid for Filtered Transactions Table + Insights Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">
             <Card className="glass-card border-white/5 overflow-hidden">
               <CardHeader className="bg-white/5 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg font-bold text-white">Filtered Transactions</CardTitle>
-                  <CardDescription className="text-muted-foreground text-xs mt-0.5">
+                  <h2 className="text-lg font-bold text-white">Filtered Transactions</h2>
+                  <p className="text-muted-foreground text-xs mt-0.5">
                     Viewing {data?.transactions?.length || 0} transaction{(data?.transactions?.length !== 1) ? "s" : ""}
-                  </CardDescription>
+                  </p>
                 </div>
                 {loading && (
                   <div className="flex items-center gap-2 shrink-0">
@@ -284,7 +215,6 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Insights and Filter Breakdown Sidebar */}
           <div className="lg:col-span-4 space-y-6 flex flex-col justify-between">
             <MemoizedInsightsCard insights={dynamicInsights} loading={loading} />
             <MemoizedFilterSummary
