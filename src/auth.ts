@@ -27,23 +27,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ user }) {
-      if (user.email) {
-        try {
-          await prisma.user.upsert({
-            where: { email: user.email },
-            update: {
-              name: user.name,
-              image: user.image,
-            },
-            create: {
-              email: user.email,
-              name: user.name,
-              image: user.image,
-            },
-          })
-        } catch (err) {
-          console.error("Fail-safe upsert error:", err)
-        }
+      if (!user.email) return false
+      const allowed = (process.env.ALLOWED_EMAILS || "")
+        .split(",")
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean)
+
+      if (allowed.length > 0 && !allowed.includes(user.email.toLowerCase().trim())) {
+        return false
+      }
+
+      try {
+        await prisma.user.upsert({
+          where: { email: user.email },
+          update: {
+            name: user.name,
+            image: user.image,
+          },
+          create: {
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          },
+        })
+      } catch (err) {
+        console.error("Fail-safe upsert error:", err)
       }
       return true
     },

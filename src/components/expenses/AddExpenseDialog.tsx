@@ -162,16 +162,29 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
               value={formData.categoryId} 
               onValueChange={(val) => val && setFormData({ ...formData, categoryId: val })}
             >
-              <SelectTrigger className="h-12 bg-white/5 border-white/10 focus:border-primary/50 transition-all">
-                <SelectValue placeholder="Select category" />
+              <SelectTrigger className="h-12 bg-white/5 border-white/10 focus:border-primary/50 transition-all w-full flex items-center justify-between">
+                {formData.categoryId ? (
+                  <span className="flex items-center gap-2">
+                    <span 
+                      className="w-3 h-3 rounded-full shrink-0" 
+                      style={{ backgroundColor: categories.find(c => c.id === formData.categoryId)?.color || "#3b82f6" }} 
+                    />
+                    <span>{categories.find(c => c.id === formData.categoryId)?.name || "Select category"}</span>
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Select category</span>
+                )}
               </SelectTrigger>
               <SelectContent className="glass border-white/10">
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id} className="focus:bg-primary/20">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color ?? '#6366f1' }} />
+                    <span className="flex items-center gap-2">
+                      <span 
+                        className="w-2.5 h-2.5 rounded-full shrink-0" 
+                        style={{ backgroundColor: cat.color || "#3b82f6" }} 
+                      />
                       {cat.name}
-                    </div>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -183,9 +196,8 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
             <Popover>
               <PopoverTrigger
                 render={
-                  <div
-                    role="button"
-                    tabIndex={0}
+                  <button
+                    type="button"
                     className={cn(
                       "flex h-12 w-full items-center rounded-xl px-3 text-sm cursor-pointer bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white transition-all",
                       !formData.date && "text-muted-foreground"
@@ -193,7 +205,7 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
-                  </div>
+                  </button>
                 }
               />
               <PopoverContent className="w-auto p-0 glass border-white/10">

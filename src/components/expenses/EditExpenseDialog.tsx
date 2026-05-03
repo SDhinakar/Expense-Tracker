@@ -118,13 +118,29 @@ export function EditExpenseDialog({
                 value={formData.categoryId} 
                 onValueChange={(val) => val && setFormData({ ...formData, categoryId: val })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
+                <SelectTrigger className="w-full justify-between flex items-center">
+                  {formData.categoryId ? (
+                    <span className="flex items-center gap-2">
+                      <span 
+                        className="w-3 h-3 rounded-full shrink-0" 
+                        style={{ backgroundColor: categories.find(c => c.id === formData.categoryId)?.color || "#3b82f6" }} 
+                      />
+                      <span>{categories.find(c => c.id === formData.categoryId)?.name || "Select a category"}</span>
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">Select a category</span>
+                  )}
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="glass border-white/10">
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
+                      <span className="flex items-center gap-2">
+                        <span 
+                          className="w-2.5 h-2.5 rounded-full shrink-0" 
+                          style={{ backgroundColor: cat.color || "#3b82f6" }} 
+                        />
+                        {cat.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -137,9 +153,8 @@ export function EditExpenseDialog({
               <Popover>
                 <PopoverTrigger
                   render={
-                    <div
-                      role="button"
-                      tabIndex={0}
+                    <button
+                      type="button"
                       className={cn(
                         "flex h-10 w-full items-center rounded-md border border-input bg-background px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
                         !formData.date && "text-muted-foreground"
@@ -147,7 +162,7 @@ export function EditExpenseDialog({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
-                    </div>
+                    </button>
                   }
                 />
                 <PopoverContent className="w-auto p-0 bg-card/90 backdrop-blur-xl border-white/10">

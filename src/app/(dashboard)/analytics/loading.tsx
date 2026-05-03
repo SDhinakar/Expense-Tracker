@@ -1,5 +1,2 @@
-import { Loader } from "@/components/ui/loader"
-
-export default function AnalyticsLoading() {
-  return <Loader />
-}
+// removed
+export default function Loading() { return null }

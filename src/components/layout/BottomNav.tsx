@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, History, BarChart3, Notebook, LogOut } from "lucide-react"
+import { Home, History, BarChart3, Notebook, LogOut, Sparkles } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
@@ -23,14 +23,6 @@ const navItems = [
     activeColor: "oklch(0.72 0.22 300)",
     activeBg: "oklch(0.72 0.22 300 / 0.15)",
     glow: "oklch(0.72 0.22 300 / 0.8)",
-  },
-  {
-    label: "Analytics",
-    href: "/analytics",
-    icon: BarChart3,
-    activeColor: "oklch(0.75 0.18 195)",
-    activeBg: "oklch(0.75 0.18 195 / 0.15)",
-    glow: "oklch(0.75 0.18 195 / 0.8)",
   },
   {
     label: "Notes",

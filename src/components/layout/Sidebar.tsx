@@ -12,7 +12,6 @@ import { motion } from "framer-motion"
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Transactions", href: "/transactions", icon: History },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Secret Notes", href: "/secret-notes", icon: Notebook },
 ]
 
