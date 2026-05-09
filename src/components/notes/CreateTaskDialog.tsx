@@ -33,20 +33,25 @@ import { useToast } from "@/context/ToastContext"
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   recurrence: z.enum(["DAILY", "WEEKLY", "MONTHLY", "CUSTOM", "NONE"]),
   customInterval: z.coerce.number().min(1).optional().nullable(),
-}).superRefine((data, ctx) => {
-  if (data.recurrence === "CUSTOM" && !data.customInterval) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Custom interval is required",
-      path: ["customInterval"],
-    })
+}).refine((data) => {
+  if (data.recurrence === "CUSTOM") {
+    return !!data.customInterval;
   }
-})
+  return true;
+}, {
+  message: "Custom interval is required",
+  path: ["customInterval"],
+});
 
-type TaskFormValues = z.infer<typeof taskSchema>
+interface TaskFormValues {
+  title: string;
+  description?: string | null;
+  recurrence: "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM" | "NONE";
+  customInterval?: number | null;
+}
 
 interface CreateTaskDialogProps {
   task?: any // If editing
