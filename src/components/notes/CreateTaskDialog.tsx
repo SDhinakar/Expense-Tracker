@@ -31,7 +31,14 @@ import { createChecklistTask, updateChecklistTask } from "@/lib/actions/notes"
 import { RecurrenceType } from "@prisma/client"
 import { useToast } from "@/context/ToastContext"
 
-const taskSchema = z.object({
+interface TaskFormValues {
+  title: string;
+  description?: string | null;
+  recurrence: "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM" | "NONE";
+  customInterval?: number | null;
+}
+
+const taskSchema: z.ZodType<TaskFormValues> = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional().nullable(),
   recurrence: z.enum(["DAILY", "WEEKLY", "MONTHLY", "CUSTOM", "NONE"]),
@@ -45,13 +52,6 @@ const taskSchema = z.object({
   message: "Custom interval is required",
   path: ["customInterval"],
 });
-
-interface TaskFormValues {
-  title: string;
-  description?: string | null;
-  recurrence: "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM" | "NONE";
-  customInterval?: number | null;
-}
 
 interface CreateTaskDialogProps {
   task?: any // If editing
