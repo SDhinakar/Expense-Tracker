@@ -95,20 +95,17 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
 
     try {
       setLoading(true)
+      const submitData = {
+        title: data.title,
+        description: data.description || undefined,
+        recurrence: data.recurrence as RecurrenceType,
+        customInterval: data.recurrence === "CUSTOM" ? customIntervalValue || undefined : undefined,
+      }
+
       if (task?.id) {
-        await updateChecklistTask(task.id, {
-          title: data.title,
-          description: data.description || undefined,
-          recurrence: data.recurrence as RecurrenceType,
-          customInterval: data.recurrence === "CUSTOM" ? customIntervalValue! : undefined,
-        })
+        await updateChecklistTask(task.id, submitData)
       } else {
-        await createChecklistTask({
-          title: data.title,
-          description: data.description,
-          recurrence: data.recurrence as RecurrenceType,
-          customInterval: data.recurrence === "CUSTOM" ? data.customInterval! : undefined,
-        })
+        await createChecklistTask(submitData)
       }
       setOpen(false)
       form.reset()
