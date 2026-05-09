@@ -5,8 +5,11 @@ import { createExpense } from "@/lib/actions/expense"
 import { getCategories } from "@/lib/actions/category"
 import { TransactionType, SplitType, Category } from "@prisma/client"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/context/ToastContext"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Sparkles, Loader2, CalendarIcon } from "lucide-react"
+import { suggestCategory } from "@/lib/actions/ai"
 import {
   Dialog,
   DialogContent,
@@ -25,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -34,7 +36,9 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
+  const [isSuggesting, setIsSuggesting] = useState(false)
   const router = useRouter()
+  const { error, success, info } = useToast()
 
   const [formData, setFormData] = useState<{
     amount: string
@@ -60,7 +64,7 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
 
   async function handleSubmit() {
     if (!formData.amount || !formData.title || !formData.categoryId) {
-      alert("Please fill in all fields")
+      error("Please fill in all fields")
       return
     }
 
@@ -83,11 +87,35 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
         splitType: SplitType.EQUAL,
         date: new Date()
       })
+      success("Transaction added successfully")
       router.refresh()
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
+      error("Failed to add transaction")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSuggestCategory = async () => {
+    if (!formData.title || formData.title.length < 3) {
+      error("Enter a title first")
+      return
+    }
+    
+    setIsSuggesting(true)
+    try {
+      const categoryId = await suggestCategory(formData.title, categories)
+      if (categoryId) {
+        setFormData({ ...formData, categoryId })
+        success("AI found a category for you!")
+      } else {
+        info("I'm not sure, could you pick a category?")
+      }
+    } catch (err) {
+      error("AI suggestion failed")
+    } finally {
+      setIsSuggesting(false)
     }
   }
 
@@ -142,16 +170,24 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-white font-medium">
-              Description
-            </Label>
-            <Input
-              id="title"
-              placeholder="What was this for?"
-              className="h-12 bg-white/5 border-white/10 focus:border-primary/50 transition-all"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            />
+            <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
+            <div className="relative">
+              <Input
+                id="title"
+                placeholder="e.g. Starbucks Coffee"
+                className="glass border-white/10 focus:ring-primary h-11 pr-12"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={handleSuggestCategory}
+                disabled={isSuggesting || formData.title.length < 3}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary disabled:opacity-50 transition-colors"
+              >
+                {isSuggesting ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <Sparkles className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">

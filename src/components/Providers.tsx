@@ -3,6 +3,8 @@
 import { SessionProvider } from "next-auth/react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DateRangeProvider } from "@/contexts/DateRangeContext"
+import { ToastProvider } from "@/context/ToastContext"
+import { ConfirmProvider } from "@/context/ConfirmContext"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +16,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <DateRangeProvider>
-          {children}
+          <ToastProvider>
+            <ConfirmProvider>
+              {children}
+            </ConfirmProvider>
+          </ToastProvider>
         </DateRangeProvider>
       </ThemeProvider>
     </SessionProvider>

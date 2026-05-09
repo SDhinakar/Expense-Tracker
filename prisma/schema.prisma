@@ -26,6 +26,8 @@ model User {
   sessions      Session[]
   friendNotes   FriendNote[]
   personalGoals PersonalGoal[]
+  checklistTasks ChecklistTask[]
+  personalNotes  PersonalNote[]
 }
 
 model Account {
@@ -196,5 +198,53 @@ model GoalContribution {
 enum NoteType {
   GET
   GIVE
+}
+
+model ChecklistTask {
+  id              String         @id @default(cuid())
+  title           String
+  description     String?
+  userId          String
+  recurrence      RecurrenceType @default(DAILY)
+  customInterval  Int?      
+  lastCompleted   DateTime?
+  nextDue         DateTime? 
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs            ChecklistLog[]
+
+  @@index([userId])
+}
+
+model ChecklistLog {
+  id              String         @id @default(cuid())
+  taskId          String
+  userId          String
+  completedAt     DateTime       @default(now())
+  notes           String?
+  task            ChecklistTask  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@index([taskId])
+  @@index([userId])
+}
+
+model PersonalNote {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum RecurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+  NONE
 }
 

@@ -13,12 +13,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { format } from "date-fns"
 import { motion, AnimatePresence } from "framer-motion"
+import { useToast } from "@/context/ToastContext"
+import { useConfirm } from "@/context/ConfirmContext"
+import { useDateRange } from "@/contexts/DateRangeContext"
 import { Trash2, Search, Pencil, ArrowUpRight, ArrowDownRight, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { EditExpenseDialog } from "@/components/expenses/EditExpenseDialog"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
-import { useDateRange } from "@/contexts/DateRangeContext"
 import { cn } from "@/lib/utils"
 import { Loader } from "@/components/ui/loader"
 
@@ -29,6 +31,8 @@ export default function TransactionsPage() {
   // Defer the filter so typing feels instant — React batches the expensive filter pass
   const search = useDeferredValue(searchInput)
   const { dateRange, setDateRange } = useDateRange()
+  const { success, error } = useToast()
+  const { confirm } = useConfirm()
 
   const loadExpenses = useCallback(async () => {
     setLoading(true)
@@ -44,9 +48,14 @@ export default function TransactionsPage() {
   }, [loadExpenses])
 
   async function handleDelete(id: string) {
-    if (confirm("Are you sure you want to delete this transaction?")) {
-      await deleteExpense(id)
-      setExpenses(expenses.filter(ex => ex.id !== id))
+    if (await confirm("Are you sure you want to delete this transaction?")) {
+      try {
+        await deleteExpense(id)
+        setExpenses(expenses.filter(ex => ex.id !== id))
+        success("Transaction deleted")
+      } catch (err) {
+        error("Failed to delete transaction")
+      }
     }
   }
 
@@ -161,8 +170,11 @@ export default function TransactionsPage() {
                           <span className="text-[11px] font-semibold text-muted-foreground">
                             {format(new Date(expense.date), "MMM d, yyyy")}
                           </span>
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold bg-white/5 text-muted-foreground border border-white/5">
-                            {expense.category.name}
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold bg-white/5 text-muted-foreground border border-white/5">
+                            {expense.category?.color && (
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: expense.category.color }} />
+                            )}
+                            {expense.category?.name}
                           </span>
                         </div>
                       </div>
@@ -252,8 +264,11 @@ export default function TransactionsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="py-4">
-                          <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold bg-white/5 text-muted-foreground border border-white/5">
-                            {expense.category.name}
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-white/5 text-muted-foreground border border-white/5">
+                            {expense.category?.color && (
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: expense.category.color }} />
+                            )}
+                            {expense.category?.name}
                           </span>
                         </TableCell>
                         <TableCell className={cn(

@@ -7,8 +7,11 @@ export function createPrismaClient() {
   if (dbUrl && !dbUrl.includes("pgbouncer=")) {
     dbUrl += dbUrl.includes("?") ? "&pgbouncer=true" : "?pgbouncer=true"
   }
-  if (dbUrl && !dbUrl.includes("connection_limit=")) {
-    dbUrl += dbUrl.includes("?") ? "&connection_limit=1" : "?connection_limit=1"
+  if (dbUrl) {
+    dbUrl = dbUrl.replace(/([?&])connection_limit=\d+/, "$1connection_limit=10")
+    if (!dbUrl.includes("connection_limit=")) {
+      dbUrl += dbUrl.includes("?") ? "&connection_limit=10" : "?connection_limit=10"
+    }
   }
   return new PrismaClient({
     datasources: {

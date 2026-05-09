@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import React from "react"
 import { FriendNote, NoteType } from "@prisma/client"
 import { useRouter } from "next/navigation"
 import { createFriendNote, updateFriendNote, toggleSettled, deleteFriendNote } from "@/lib/actions/friendNotes"
+import { useToast } from "@/context/ToastContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,11 +23,18 @@ import { cn } from "@/lib/utils"
 
 export function FriendNoteClient({ initialNotes }: { initialNotes: FriendNote[] }) {
   const [notes, setNotes] = useState<FriendNote[]>(initialNotes)
+
+  // Sync state when props change (via router.refresh)
+  React.useEffect(() => {
+    setNotes(initialNotes)
+  }, [initialNotes])
+
   const [activeTab, setActiveTab] = useState<"active" | "settled">("active")
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { error, success } = useToast()
 
   const [formData, setFormData] = useState<{
     friendName: string
@@ -65,7 +74,7 @@ export function FriendNoteClient({ initialNotes }: { initialNotes: FriendNote[] 
   // Form handling
   async function handleAddNote() {
     if (!formData.friendName || !formData.amount) {
-      alert("Please fill in Name and Amount")
+      error("Please fill in Name and Amount")
       return
     }
 
@@ -81,9 +90,11 @@ export function FriendNoteClient({ initialNotes }: { initialNotes: FriendNote[] 
       setNotes([newNote, ...notes])
       setFormData({ friendName: "", amount: "", type: "GET", notes: "" })
       setIsAddOpen(false)
+      success("Note created successfully")
       router.refresh()
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
+      error("Failed to create note")
     } finally {
       setLoading(false)
     }
@@ -91,7 +102,7 @@ export function FriendNoteClient({ initialNotes }: { initialNotes: FriendNote[] 
 
   async function handleEditNote() {
     if (!editData.friendName || !editData.amount) {
-      alert("Please fill in Name and Amount")
+      error("Please fill in Name and Amount")
       return
     }
 
@@ -106,9 +117,11 @@ export function FriendNoteClient({ initialNotes }: { initialNotes: FriendNote[] 
 
       setNotes(notes.map((n) => (n.id === updated.id ? updated : n)))
       setIsEditOpen(false)
+      success("Note updated successfully")
       router.refresh()
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
+      error("Failed to update note")
     } finally {
       setLoading(false)
     }
@@ -118,9 +131,11 @@ export function FriendNoteClient({ initialNotes }: { initialNotes: FriendNote[] 
     try {
       const updated = await toggleSettled(note.id, !note.isSettled)
       setNotes(notes.map((n) => (n.id === updated.id ? updated : n)))
+      success(updated.isSettled ? "Marked as settled" : "Marked as active")
       router.refresh()
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
+      error("Failed to toggle status")
     }
   }
 
@@ -128,9 +143,11 @@ export function FriendNoteClient({ initialNotes }: { initialNotes: FriendNote[] 
     try {
       await deleteFriendNote(id)
       setNotes(notes.filter((n) => n.id !== id))
+      success("Note deleted successfully")
       router.refresh()
-    } catch (error) {
-      console.error(error)
+    } catch (err) {
+      console.error(err)
+      error("Failed to delete note")
     }
   }
 

@@ -11,7 +11,10 @@ import { FiltersBar } from "@/components/dashboard/FiltersBar"
 import { TransactionsTable } from "@/components/dashboard/TransactionsTable"
 import { InsightsCard } from "@/components/dashboard/InsightsCard"
 import { FilterSummary } from "@/components/dashboard/FilterSummary"
+import { RoutineReminders } from "@/components/dashboard/RoutineReminders"
+import { getFinancialAdvisorInsights } from "@/lib/actions/ai"
 import { Loader } from "@/components/ui/loader"
+import { useToast } from "@/context/ToastContext"
 
 const container = {
   hidden: { opacity: 0 },
@@ -31,6 +34,10 @@ const MemoizedFilterSummary = React.memo(FilterSummary)
 export default function DashboardPage() {
   const { data, loading, refreshData, cooldownActive } = useDashboardData()
   const [categories, setCategories] = React.useState<any[]>([])
+  const [isAIMode, setIsAIMode] = React.useState(false)
+  const [aiInsights, setAiInsights] = React.useState<any[]>([])
+  const [aiLoading, setAiLoading] = React.useState(false)
+  const { info, error } = useToast()
 
   React.useEffect(() => {
     getCategories().then(setCategories)
@@ -70,6 +77,27 @@ export default function DashboardPage() {
     }
     return items
   }, [data])
+
+  const handleToggleAI = async () => {
+    if (!isAIMode) {
+      if (!data) return
+      setAiLoading(true)
+      setIsAIMode(true)
+      try {
+        info("Consulting Zenithe AI...")
+        const insights = await getFinancialAdvisorInsights(data)
+        setAiInsights(insights)
+      } catch (err) {
+        console.error(err)
+        error("AI advisor is currently unavailable.")
+        setIsAIMode(false)
+      } finally {
+        setAiLoading(false)
+      }
+    } else {
+      setIsAIMode(false)
+    }
+  }
 
   if (loading && !data) {
     return (
@@ -117,6 +145,8 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+
+      <RoutineReminders />
 
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
         <motion.div variants={item} className="col-span-2 sm:col-span-2 lg:col-span-1">
@@ -216,7 +246,13 @@ export default function DashboardPage() {
           </div>
 
           <div className="lg:col-span-4 space-y-6 flex flex-col justify-between">
-            <MemoizedInsightsCard insights={dynamicInsights} loading={loading} />
+            <MemoizedInsightsCard 
+              insights={isAIMode ? aiInsights : dynamicInsights} 
+              loading={loading}
+              isAIMode={isAIMode}
+              aiLoading={aiLoading}
+              onToggleAI={handleToggleAI}
+            />
             <MemoizedFilterSummary
               incomeTotal={incomeTotal}
               expenseTotal={expenseTotal}

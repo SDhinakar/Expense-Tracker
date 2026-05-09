@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, History, BarChart3, Notebook, LogOut, Sparkles } from "lucide-react"
+import { Home, History, BarChart3, Notebook, LogOut, Sparkles, ClipboardList } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
@@ -25,12 +25,20 @@ const navItems = [
     glow: "oklch(0.72 0.22 300 / 0.8)",
   },
   {
-    label: "Notes",
+    label: "Secret",
     href: "/secret-notes",
     icon: Notebook,
     activeColor: "oklch(0.76 0.18 145)",
     activeBg: "oklch(0.76 0.18 145 / 0.15)",
     glow: "oklch(0.76 0.18 145 / 0.8)",
+  },
+  {
+    label: "Notes",
+    href: "/notes",
+    icon: ClipboardList,
+    activeColor: "oklch(0.72 0.18 200)",
+    activeBg: "oklch(0.72 0.18 200 / 0.15)",
+    glow: "oklch(0.72 0.18 200 / 0.8)",
   },
 ]
 
