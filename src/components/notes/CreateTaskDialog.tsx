@@ -35,7 +35,7 @@ const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional().nullable(),
   recurrence: z.enum(["DAILY", "WEEKLY", "MONTHLY", "CUSTOM", "NONE"]),
-  customInterval: z.coerce.number().min(1).optional().nullable(),
+  customInterval: z.any(),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -74,7 +74,7 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
   }
 
   const form = useForm<TaskFormValues>({
-    resolver: zodResolver(taskSchema),
+    resolver: zodResolver(taskSchema) as any,
     defaultValues: {
       title: task?.title || "",
       description: task?.description || "",
@@ -86,7 +86,9 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
   const recurrence = form.watch("recurrence")
 
   async function onSubmit(data: TaskFormValues) {
-    if (data.recurrence === "CUSTOM" && !data.customInterval) {
+    const customIntervalValue = data.customInterval ? Number(data.customInterval) : null
+    
+    if (data.recurrence === "CUSTOM" && !customIntervalValue) {
       form.setError("customInterval", { message: "Custom interval is required" })
       return
     }
@@ -96,9 +98,9 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
       if (task?.id) {
         await updateChecklistTask(task.id, {
           title: data.title,
-          description: data.description,
+          description: data.description || undefined,
           recurrence: data.recurrence as RecurrenceType,
-          customInterval: data.recurrence === "CUSTOM" ? data.customInterval! : undefined,
+          customInterval: data.recurrence === "CUSTOM" ? customIntervalValue! : undefined,
         })
       } else {
         await createChecklistTask({
