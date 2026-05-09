@@ -169,8 +169,8 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
                 className="glass border-white/10 focus-visible:ring-primary h-11" 
                 {...form.register("title")} 
               />
-              {form.formState.errors.title && (
-                <p className="text-xs text-rose-500">{form.formState.errors.title.message}</p>
+              {form.formState.errors.title?.message && (
+                <p className="text-xs text-rose-500">{String(form.formState.errors.title.message)}</p>
               )}
             </div>
 
@@ -196,8 +196,8 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
                 className="glass border-white/10 focus-visible:ring-primary min-h-[80px] resize-none" 
                 {...form.register("description")} 
               />
-              {form.formState.errors.description && (
-                <p className="text-xs text-rose-500">{form.formState.errors.description.message}</p>
+              {form.formState.errors.description?.message && (
+                <p className="text-xs text-rose-500">{String(form.formState.errors.description.message)}</p>
               )}
             </div>
 
@@ -219,8 +219,8 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
                     <SelectItem value="NONE">No Repeat</SelectItem>
                   </SelectContent>
                 </Select>
-                {form.formState.errors.recurrence && (
-                  <p className="text-xs text-rose-500">{form.formState.errors.recurrence.message}</p>
+                {form.formState.errors.recurrence?.message && (
+                  <p className="text-xs text-rose-500">{String(form.formState.errors.recurrence.message)}</p>
                 )}
               </div>
 
@@ -233,8 +233,8 @@ export function CreateTaskDialog({ task, children, onSuccess }: CreateTaskDialog
                     className="glass border-white/10 focus-visible:ring-primary h-11" 
                     {...form.register("customInterval", { valueAsNumber: true })} 
                   />
-                  {form.formState.errors.customInterval && (
-                    <p className="text-xs text-rose-500">{form.formState.errors.customInterval.message}</p>
+                  {form.formState.errors.customInterval?.message && (
+                    <p className="text-xs text-rose-500">{String(form.formState.errors.customInterval.message)}</p>
                   )}
                 </div>
               )}
