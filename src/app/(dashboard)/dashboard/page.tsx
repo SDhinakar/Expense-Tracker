@@ -109,7 +109,8 @@ export default function DashboardPage() {
 
   const { balance = 0, income = 0, expense = 0, incomeTotal = 0, expenseTotal = 0, netTotal = 0, savingsRate = 0, updatedAt } = data || {}
   const overallSavingsRate = income > 0 ? ((income - expense) / income) * 100 : 0
-  const monthlyBalance = incomeTotal - expenseTotal
+  const totalBalance = expense - income
+  const monthlyBalance = expenseTotal - incomeTotal
 
   return (
     <motion.div
@@ -159,9 +160,9 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl lg:text-3xl font-extrabold text-white">₹{balance.toLocaleString("en-IN")}</div>
+              <div className="text-2xl lg:text-3xl font-extrabold text-white">₹{totalBalance.toLocaleString("en-IN")}</div>
               <p className="text-[11px] font-bold text-muted-foreground mt-1 tracking-wide uppercase">
-                Month flow: <span className={monthlyBalance >= 0 ? "text-emerald-400" : "text-rose-400"}>₹{monthlyBalance.toLocaleString("en-IN")}</span>
+                Month flow: <span className={monthlyBalance <= 0 ? "text-emerald-400" : "text-rose-400"}>₹{monthlyBalance.toLocaleString("en-IN")}</span>
               </p>
             </CardContent>
           </Card>

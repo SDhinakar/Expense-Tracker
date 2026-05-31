@@ -29,9 +29,18 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const loadData = React.useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true)
     try {
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      startOfMonth.setHours(0, 0, 0, 0)
+      const defaultFrom = startOfMonth.toISOString()
+
+      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      endOfToday.setHours(23, 59, 59, 999)
+      const defaultTo = endOfToday.toISOString()
+
       const res = await getDashboardAndAnalytics({
-        fromStr: fromParam || undefined,
-        toStr: toParam || undefined,
+        fromStr: fromParam || defaultFrom,
+        toStr: toParam || defaultTo,
         categoryIds: catParam === "all" ? [] : [catParam],
         type: typeParam as any,
       })

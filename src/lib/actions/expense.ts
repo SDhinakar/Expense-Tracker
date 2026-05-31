@@ -157,18 +157,25 @@ const fetchUnifiedData = unstable_cache(
       }),
       // 3. Current user limits
       prisma.budget.findMany({ where: { userId } }),
+      // 4. Filtered aggregates (without take limit)
+      prisma.expense.groupBy({
+        by: ["type"],
+        where: whereClause,
+        _sum: { amount: true },
+      }),
     ])
 
     const lifetimeTotals = results[0].status === "fulfilled" ? results[0].value : []
     const transactions = results[1].status === "fulfilled" ? results[1].value : []
     const userBudgets = results[2].status === "fulfilled" ? (results[2].value as any[]) : []
+    const filteredTotals = results[3].status === "fulfilled" ? results[3].value : []
 
     const balanceIncome = lifetimeTotals.find(t => t.type === "INCOME")?._sum.amount ?? 0
     const balanceExpense = lifetimeTotals.find(t => t.type === "EXPENSE")?._sum.amount ?? 0
     const balance = balanceIncome - balanceExpense
 
-    const incomeTotal = transactions.filter(t => t.type === "INCOME").reduce((s, t) => s + t.amount, 0)
-    const expenseTotal = transactions.filter(t => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0)
+    const incomeTotal = filteredTotals.find(t => t.type === "INCOME")?._sum.amount ?? 0
+    const expenseTotal = filteredTotals.find(t => t.type === "EXPENSE")?._sum.amount ?? 0
     const netTotal = incomeTotal - expenseTotal
     const savingsRate = incomeTotal > 0 ? ((incomeTotal - expenseTotal) / incomeTotal) * 100 : 0
 
