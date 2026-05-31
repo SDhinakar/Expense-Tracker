@@ -196,7 +196,16 @@ export function AddExpenseDialog({ children }: { children: React.ReactElement })
             </Label>
             <Select 
               value={formData.categoryId} 
-              onValueChange={(val) => val && setFormData({ ...formData, categoryId: val })}
+              onValueChange={(val) => {
+                if (!val) return
+                const selectedCat = categories.find(c => c.id === val)
+                const isSalary = selectedCat?.name === "Salary"
+                setFormData({
+                  ...formData,
+                  categoryId: val,
+                  type: isSalary ? TransactionType.INCOME : formData.type
+                })
+              }}
             >
               <SelectTrigger className="h-12 bg-white/5 border-white/10 focus:border-primary/50 transition-all w-full flex items-center justify-between">
                 {formData.categoryId ? (

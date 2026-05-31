@@ -38,9 +38,19 @@ export async function createExpense(data: {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
+  const category = await prisma.category.findUnique({
+    where: { id: data.categoryId }
+  })
+
+  let finalType = data.type
+  if (category?.name === "Salary") {
+    finalType = TransactionType.INCOME
+  }
+
   const expense = await prisma.expense.create({
     data: {
       ...data,
+      type: finalType,
       userId: session.user.id,
     },
   })
@@ -74,9 +84,21 @@ export async function updateExpense(id: string, data: {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
 
+  const category = await prisma.category.findUnique({
+    where: { id: data.categoryId }
+  })
+
+  let finalType = data.type
+  if (category?.name === "Salary") {
+    finalType = TransactionType.INCOME
+  }
+
   await prisma.expense.update({
     where: { id, userId: session.user.id },
-    data,
+    data: {
+      ...data,
+      type: finalType,
+    },
   })
 
   revalidateTag(`dashboard-data-${session.user.id}`, "default")

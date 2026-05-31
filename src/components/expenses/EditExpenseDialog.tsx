@@ -116,7 +116,16 @@ export function EditExpenseDialog({
             <div className="col-span-3">
               <Select 
                 value={formData.categoryId} 
-                onValueChange={(val) => val && setFormData({ ...formData, categoryId: val })}
+                onValueChange={(val) => {
+                  if (!val) return
+                  const selectedCat = categories.find(c => c.id === val)
+                  const isSalary = selectedCat?.name === "Salary"
+                  setFormData({
+                    ...formData,
+                    categoryId: val,
+                    type: isSalary ? TransactionType.INCOME : formData.type
+                  })
+                }}
               >
                 <SelectTrigger className="w-full justify-between flex items-center">
                   {formData.categoryId ? (
